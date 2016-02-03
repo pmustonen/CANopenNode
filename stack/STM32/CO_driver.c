@@ -88,7 +88,7 @@ void CanLedsSet(eCoLeds led)
 
 
 /******************************************************************************/
-void CO_CANsetConfigurationMode(int32_t CANbaseAddress){
+void CO_CANsetConfigurationMode(CAN_TypeDef* CANbaseAddress){
 }
 
 

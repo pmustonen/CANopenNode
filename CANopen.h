@@ -166,7 +166,7 @@ typedef struct{
  * CO_ERROR_OUT_OF_MEMORY, CO_ERROR_ILLEGAL_BAUDRATE
  */
 CO_ReturnError_t CO_init(
-        int32_t                 CANbaseAddress,
+        CAN_TypeDef*            CANbaseAddress,
         uint8_t                 nodeId,
         uint16_t                bitRate);
 
@@ -176,7 +176,7 @@ CO_ReturnError_t CO_init(
  *
  * @param CANbaseAddress Address of the CAN module, passed to CO_CANmodule_init().
  */
-void CO_delete(int32_t CANbaseAddress);
+void CO_delete(CAN_TypeDef* CANbaseAddress);
 
 
 /**

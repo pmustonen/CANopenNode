@@ -50,7 +50,7 @@
 
 /* If defined, global variables will be used, otherwise CANopen objects will
    be generated with calloc(). */
-/* #define CO_USE_GLOBALS */
+#define CO_USE_GLOBALS
 
 
 #ifndef CO_USE_GLOBALS
@@ -174,7 +174,7 @@
 
 /******************************************************************************/
 CO_ReturnError_t CO_init(
-        int32_t                 CANbaseAddress,
+        CAN_TypeDef*            CANbaseAddress,
         uint8_t                 nodeId,
         uint16_t                bitRate)
 {
@@ -481,7 +481,7 @@ CO_ReturnError_t CO_init(
 
 
 /******************************************************************************/
-void CO_delete(int32_t CANbaseAddress){
+void CO_delete(CAN_TypeDef* CANbaseAddress){
 #ifndef CO_USE_GLOBALS
     int16_t i;
 #endif
