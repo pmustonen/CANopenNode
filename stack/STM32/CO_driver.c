@@ -1,11 +1,12 @@
 /*
- * CAN module object for ST STM32F103 microcontroller.
+ * CAN module object for ST STM32F334 microcontroller.
  *
  * @file        CO_driver.c
  * @author      Janez Paternoster
  * @author      Ondrej Netik
  * @author      Vijayendra
  * @author      Jan van Lienden
+ * @author      Petteri Mustonen
  * @copyright   2013 Janez Paternoster
  *
  * This file is part of CANopenNode, an opensource CANopen Stack.
@@ -46,10 +47,10 @@
  */
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f10x_conf.h"
+#include "stm32f30x.h"
 #include "CO_driver.h"
 #include "CO_Emergency.h"
-#include "led.h"
+//#include "led.h"
 #include <string.h>
 
 /* Private macro -------------------------------------------------------------*/
@@ -60,23 +61,24 @@ static void CO_CANClkSetting (void);
 static void CO_CANconfigGPIO (void);
 static void CO_CANsendToModule(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer, uint8_t transmit_mailbox);
 
+
 void InitCanLeds(void)
 {
-    vLED_InitRCC();
-    vLED_InitPort();
+    //vLED_InitRCC();
+    //vLED_InitPort();
 }
 
 void CanLedsSet(eCoLeds led)
 {
-    if (led & eCoLed_Green)
-        vLED_OnPB14Led();
-    else
-        vLED_OffPB14Led();
+    //if (led & eCoLed_Green)
+    //    vLED_OnPB14Led();
+    //else
+    //    vLED_OffPB14Led();
 
-    if (led & eCoLed_Red)
-        vLED_OnPB15Led();
-    else
-        vLED_OffPB15Led();
+    //if (led & eCoLed_Red)
+    //    vLED_OnPB15Led();
+    //else
+    //    vLED_OffPB15Led();
 
 }
 
@@ -129,8 +131,8 @@ CO_ReturnError_t CO_CANmodule_init(
     CANmodule->CANtxCount = 0;
     CANmodule->errOld = 0;
     CANmodule->em = 0;
-
-		// Replaced magic number 0x03 by (CAN_IT_TME | CAN_IT_FMP0) JvL
+	
+    // Replaced magic number 0x03 by (CAN_IT_TME | CAN_IT_FMP0) JvL
     CAN_ITConfig(CANmodule->CANbaseAddress, (CAN_IT_TME | CAN_IT_FMP0), DISABLE);
 
     for (i = 0; i < rxSize; i++)
@@ -173,9 +175,9 @@ CO_ReturnError_t CO_CANmodule_init(
         case 10: CAN_InitStruct.CAN_Prescaler = 200;
             break;
     }
-    CAN_InitStruct.CAN_SJW = CAN_SJW_4tq;     // changed by VJ, old value = CAN_SJW_1tq;
-    CAN_InitStruct.CAN_BS1 = CAN_BS1_12tq;    // changed by VJ, old value = CAN_BS1_3tq;
-    CAN_InitStruct.CAN_BS2 = CAN_BS2_5tq;     // changed by VJ, old value = CAN_BS2_2tq;
+    CAN_InitStruct.CAN_SJW = CAN_SJW_1tq;     // changed by VJ, old value = CAN_SJW_1tq;
+    CAN_InitStruct.CAN_BS1 = CAN_BS1_13tq;    // changed by VJ, old value = CAN_BS1_3tq;
+    CAN_InitStruct.CAN_BS2 = CAN_BS2_2tq;     // changed by VJ, old value = CAN_BS2_2tq;
     CAN_InitStruct.CAN_NART = ENABLE;   // No Automatic retransmision
 
    /* CO - Changed VJ Start */
@@ -212,7 +214,7 @@ CO_ReturnError_t CO_CANmodule_init(
 
    // CAN_OperatingModeRequest(CANmodule->CANbaseAddress, CAN_Mode_Normal); // Not needed as after init Can_init functions puts the controller in normal mode - VJ
 
-    CAN_ITConfig(CANmodule->CANbaseAddress, 0x03, ENABLE);
+    CAN_ITConfig(CANmodule->CANbaseAddress, (CAN_IT_TME | CAN_IT_FMP0), ENABLE);
 
     return CO_ERROR_NO;
 }
@@ -231,7 +233,7 @@ CO_ReturnError_t CO_CANrxBufferInit(
         uint16_t                mask,
         int8_t                  rtr,
         void                   *object,
-        void                  (*pFunct)(void *object, CO_CANrxMsg_t *message))
+        void                  (*pFunct)(void *object, const CO_CANrxMsg_t *message))
 {
     CO_CANrx_t *rxBuffer;
 	//CanRxMsg *rxBuffer;
@@ -388,10 +390,10 @@ void CO_CANverifyErrors(CO_CANmodule_t *CANmodule)
       CANmodule->errOld = err;
 
       //CAN RX bus overflow
-      if(CANmodule->CANbaseAddress->RF0R & 0x08)
+      if(CANmodule->CANbaseAddress->RF0R & 0x10)
       {
          CO_errorReport(em, CO_EM_CAN_RXB_OVERFLOW, CO_EMC_CAN_OVERRUN, err);
-         CANmodule->CANbaseAddress->RF0R &=~0x08;//clear bits
+         CANmodule->CANbaseAddress->RF0R &=~0x10;//clear bits
       }
 
       //CAN TX bus off
@@ -434,6 +436,7 @@ void CO_CANinterrupt_Rx(CO_CANmodule_t *CANmodule)
 	        uint16_t index;
 	        uint8_t msgMatched = 0;
 	        CO_CANrx_t *msgBuff = CANmodule->rxArray;
+        
 	        for (index = 0; index < CANmodule->rxSize; index++)
 	        {
 	            uint16_t msg = (CAN1_RxMsg.StdId << 2) | (CAN1_RxMsg.RTR ? 2 : 0);
@@ -446,9 +449,33 @@ void CO_CANinterrupt_Rx(CO_CANmodule_t *CANmodule)
 	        }
 	        //Call specific function, which will process the message
 	        if (msgMatched && msgBuff->pFunct)
-            msgBuff->pFunct(msgBuff->object, &CAN1_RxMsg);
+            msgBuff->pFunct(msgBuff->object, (CO_CANrxMsg_t*) &CAN1_RxMsg);
 		}
 }
+
+/******************************************************************************/
+// Interrupt from Receiver
+void CO_CANprocess_Rx(CO_CANmodule_t *CANmodule, CanRxMsg* RxMsg)
+{
+    uint16_t index;
+    uint8_t msgMatched = 0;
+    CO_CANrx_t *msgBuff = CANmodule->rxArray;
+
+    for (index = 0; index < CANmodule->rxSize; index++)
+    {
+        uint16_t msg = (RxMsg->StdId << 2) | (RxMsg->RTR ? 2 : 0);
+        if (((msg ^ msgBuff->ident) & msgBuff->mask) == 0)
+        {
+            msgMatched = 1;
+            break;
+        }
+        msgBuff++;
+    }
+    //Call specific function, which will process the message
+    if (msgMatched && msgBuff->pFunct)
+    msgBuff->pFunct(msgBuff->object, (CO_CANrxMsg_t*) RxMsg);
+}
+
 
 /******************************************************************************/
 // Interrupt from Transeiver
@@ -457,7 +484,7 @@ void CO_CANinterrupt_Tx(CO_CANmodule_t *CANmodule)
 
      int8_t txBuff;
     /* Clear interrupt flag */
-    CAN_ITConfig(CANmodule->CANbaseAddress, CAN_IT_TME, DISABLE); // Transmit mailbox empty interrupt
+    //CAN_ITConfig(CANmodule->CANbaseAddress, CAN_IT_TME, DISABLE); // Transmit mailbox empty interrupt
     /* First CAN message (bootup) was sent successfully */
     CANmodule->firstCANtxMessage = 0;
     /* clear flag from previous message */
@@ -522,27 +549,26 @@ static void CO_CANsendToModule(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer, ui
 /******************************************************************************/
 static void CO_CANClkSetting (void)
 {
-    RCC_APB2PeriphClockCmd(CLOCK_GPIO_CAN | RCC_APB2Periph_AFIO, ENABLE);
-    RCC_APB1PeriphClockCmd(CLOCK_CAN, ENABLE);
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOB, ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
 }
 
 /******************************************************************************/
 static void CO_CANconfigGPIO (void)
 {
+    GPIO_InitTypeDef GPIO_InitStruct;
 
-    GPIO_InitTypeDef GPIO_InitStructure;
-
-        /* Remap */
-    GPIO_PinRemapConfig(GPIO_Remapping_CAN, GPIO_CAN_Remap_State);
-    /* Configure CAN pin: RX */
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_CAN_RX;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-    GPIO_Init(GPIO_CAN, &GPIO_InitStructure);
-    /* Configure CAN pin: TX */
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_CAN_TX;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIO_CAN, &GPIO_InitStructure);
-
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_Level_1;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+    //Should the RX pin be enabled with pull-up ??!?!?!"?
+	
+	GPIO_Init(GPIOB, &GPIO_InitStruct);
+    
+    //Map to correct alternative function (9 == CAN)
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource8, GPIO_AF_9);
+	GPIO_PinAFConfig(GPIOB, GPIO_PinSource9, GPIO_AF_9);
 }
 /* CO- VJ Change End */
