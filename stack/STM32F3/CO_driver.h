@@ -1,11 +1,12 @@
 /*
- * CAN module object for ST STM32F103 microcontroller.
+ * CAN module object for ST STM32F334 microcontroller.
  *
  * @file        CO_driver.h
  * @author      Janez Paternoster
  * @author      Ondrej Netik
  * @author      Vijayendra
  * @author      Jan van Lienden
+ * @author      Petteri Mustonen
  * @copyright   2013 Janez Paternoster
  *
  * This file is part of CANopenNode, an opensource CANopen Stack.
@@ -54,31 +55,36 @@
 
 
 /* Includes ------------------------------------------------------------------*/
-#include "common.h"
-#include "stm32f10x_conf.h"
+#include <stdbool.h>
+#include <stddef.h>         /* for 'NULL' */
+#include <stdint.h>         /* for 'int8_t' to 'uint64_t' */
+#include "stm32f30x.h"
+
+#define bool_t	bool
+#define CO_LITTLE_ENDIAN
 
 /* Exported define -----------------------------------------------------------*/
 #define PACKED_STRUCT               __attribute__((packed))
 #define ALIGN_STRUCT_DWORD          __attribute__((aligned(4)))
 
 /* Peripheral addresses */
-    #define ADDR_CAN1               CAN1
-    #define TMIDxR_TXRQ  ((uint32_t)0x00000001) /* Transmit mailbox request */
+#define ADDR_CAN1               CAN1
+//#define TMIDxR_TXRQ  ((uint32_t)0x00000001) /* Transmit mailbox request */
 
 /* Critical sections */
-    #define CO_LOCK_CAN_SEND()      __set_PRIMASK(1);
-    #define CO_UNLOCK_CAN_SEND()    __set_PRIMASK(0);
+#define CO_LOCK_CAN_SEND()      __set_PRIMASK(1);
+#define CO_UNLOCK_CAN_SEND()    __set_PRIMASK(0);
 
-    #define CO_LOCK_EMCY()          __set_PRIMASK(1);
-    #define CO_UNLOCK_EMCY()        __set_PRIMASK(0);
+#define CO_LOCK_EMCY()          __set_PRIMASK(1);
+#define CO_UNLOCK_EMCY()        __set_PRIMASK(0);
 
-    #define CO_LOCK_OD()            __set_PRIMASK(1);
-    #define CO_UNLOCK_OD()          __set_PRIMASK(0);
+#define CO_LOCK_OD()            __set_PRIMASK(1);
+#define CO_UNLOCK_OD()          __set_PRIMASK(0);
 
     
 #define CLOCK_CAN                   RCC_APB1Periph_CAN1
 
-#define CAN_REMAP_2                 /* Select CAN1 remap 2 */
+#define CAN_REMAP_1                 /* Select CAN1 remap 2 */
 #ifdef CAN1_NO_REMAP                /* CAN1 not remapped */
 #define CLOCK_GPIO_CAN              RCC_APB2Periph_GPIOA
 #define GPIO_Remapping_CAN          (0)
@@ -88,7 +94,7 @@
 #define GPIO_CAN_Remap_State        DISABLE
 #endif
 #ifdef CAN_REMAP1                  /* CAN1 remap 1 */
-#define CLOCK_GPIO_CAN              RCC_APB2Periph_GPIOB
+#define CLOCK_GPIO_CAN              RCC_AHBPeriph_GPIOB
 #define GPIO_Remapping_CAN          GPIO_Remap1_CAN1
 #define GPIO_CAN                    GPIOB
 #define GPIO_Pin_CAN_RX             GPIO_Pin_8
@@ -104,13 +110,9 @@
 #define GPIO_CAN_Remap_State        ENABLE
 #endif
 
-#ifdef STM32F10X_CL
+
 #define CAN1_TX_INTERRUPTS          CAN1_TX_IRQn
 #define CAN1_RX0_INTERRUPTS         CAN1_RX0_IRQn
-#else
-#define CAN1_TX_INTERRUPTS          USB_HP_CAN1_TX_IRQn
-#define CAN1_RX0_INTERRUPTS         USB_LP_CAN1_RX0_IRQn
-#endif
 
 #define CAN_TXMAILBOX_0   ((uint8_t)0x00)
 #define CAN_TXMAILBOX_1   ((uint8_t)0x01)
@@ -162,10 +164,10 @@ typedef struct{
 
 /* Received message object */
 typedef struct{
-    uint16_t            ident;
-    uint16_t            mask;
+    uint16_t           ident;
+    uint16_t           mask;
     void               *object;
-    void              (*pFunct)(void *object, CanRxMsg *message); // Changed by VJ
+    void              (*pFunct)(void *object, const CO_CANrxMsg_t *message); // Changed by VJ
 }CO_CANrx_t;
 
 
@@ -186,9 +188,9 @@ typedef struct{
     uint16_t            rxSize;
     CO_CANtx_t         *txArray;
     uint16_t            txSize;
-    volatile bool_t     CANnormal;
-    volatile bool_t     useCANrxFilters;
-    volatile uint8_t    useCANrxFilters;
+    volatile bool     CANnormal;
+    volatile bool     useCANrxFilters;
+    //volatile uint8_t    useCANrxFilters;
     volatile uint8_t    bufferInhibitFlag;
     volatile uint8_t    firstCANtxMessage;
     volatile uint16_t   CANtxCount;
@@ -213,8 +215,8 @@ void CanLedsSet(eCoLeds led);
 
 
 /* Request CAN configuration or normal mode */
-//void CO_CANsetConfigurationMode(CAN_TypeDef *CANbaseAddress);
-//void CO_CANsetNormalMode(CO_CANmodule_t *CANmodule);
+void CO_CANsetConfigurationMode(CAN_TypeDef* CANbaseAddress);
+void CO_CANsetNormalMode(CO_CANmodule_t *CANmodule);
 
 /* Initialize CAN module object. */
 CO_ReturnError_t CO_CANmodule_init(
@@ -243,7 +245,7 @@ CO_ReturnError_t CO_CANrxBufferInit(
         uint16_t                mask,
         int8_t                  rtr,
         void                   *object,
-        void                  (*pFunct)(void *object, CO_CANrxMsg_t *message));
+        void                  (*pFunct)(void *object, const CO_CANrxMsg_t *message));
 
 
 /* Configure CAN message transmit buffer. */
@@ -271,6 +273,7 @@ void CO_CANverifyErrors(CO_CANmodule_t *CANmodule);
 void CO_CANinterrupt_Rx(CO_CANmodule_t *CANmodule);
 void CO_CANinterrupt_Tx(CO_CANmodule_t *CANmodule);
 void CO_CANinterrupt_Status(CO_CANmodule_t *CANmodule);
+void CO_CANprocess_Rx(CO_CANmodule_t *CANmodule, CanRxMsg* RxMsg);
 
 
 #endif
