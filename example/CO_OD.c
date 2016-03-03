@@ -156,19 +156,19 @@ struct sCO_OD_EEPROM CO_OD_EEPROM = {
 /*0x1400*/ const CO_OD_entryRecord_t OD_record1400[3] = {
            {(void*)&CO_OD_ROM.RPDOCommunicationParameter[0].maxSubIndex, 0x05,  1},
            {(void*)&CO_OD_ROM.RPDOCommunicationParameter[0].COB_IDUsedByRPDO, 0x8D,  4},
-           {(void*)&CO_OD_ROM.RPDOCommunicationParameter[0].transmissionType, 0xFE,  1}};
+           {(void*)&CO_OD_ROM.RPDOCommunicationParameter[0].transmissionType, 0x0D,  1}};
 /*0x1401*/ const CO_OD_entryRecord_t OD_record1401[3] = {
            {(void*)&CO_OD_ROM.RPDOCommunicationParameter[1].maxSubIndex, 0x05,  1},
            {(void*)&CO_OD_ROM.RPDOCommunicationParameter[1].COB_IDUsedByRPDO, 0x8D,  4},
-           {(void*)&CO_OD_ROM.RPDOCommunicationParameter[1].transmissionType, 0xFE,  1}};
+           {(void*)&CO_OD_ROM.RPDOCommunicationParameter[1].transmissionType, 0x0D,  1}};
 /*0x1402*/ const CO_OD_entryRecord_t OD_record1402[3] = {
            {(void*)&CO_OD_ROM.RPDOCommunicationParameter[2].maxSubIndex, 0x05,  1},
            {(void*)&CO_OD_ROM.RPDOCommunicationParameter[2].COB_IDUsedByRPDO, 0x8D,  4},
-           {(void*)&CO_OD_ROM.RPDOCommunicationParameter[2].transmissionType, 0xFE,  1}};
+           {(void*)&CO_OD_ROM.RPDOCommunicationParameter[2].transmissionType, 0x0D,  1}};
 /*0x1403*/ const CO_OD_entryRecord_t OD_record1403[3] = {
            {(void*)&CO_OD_ROM.RPDOCommunicationParameter[3].maxSubIndex, 0x05,  1},
            {(void*)&CO_OD_ROM.RPDOCommunicationParameter[3].COB_IDUsedByRPDO, 0x8D,  4},
-           {(void*)&CO_OD_ROM.RPDOCommunicationParameter[3].transmissionType, 0xFE,  1}};
+           {(void*)&CO_OD_ROM.RPDOCommunicationParameter[3].transmissionType, 0x0D,  1}};
 /*0x1600*/ const CO_OD_entryRecord_t OD_record1600[9] = {
            {(void*)&CO_OD_ROM.RPDOMappingParameter[0].numberOfMappedObjects, 0x0D,  1},
            {(void*)&CO_OD_ROM.RPDOMappingParameter[0].mappedObject1, 0x8D,  4},
@@ -212,7 +212,7 @@ struct sCO_OD_EEPROM CO_OD_EEPROM = {
 /*0x1800*/ const CO_OD_entryRecord_t OD_record1800[7] = {
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[0].maxSubIndex, 0x05,  1},
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[0].COB_IDUsedByTPDO, 0x8D,  4},
-           {(void*)&CO_OD_ROM.TPDOCommunicationParameter[0].transmissionType, 0xFE,  1},
+           {(void*)&CO_OD_ROM.TPDOCommunicationParameter[0].transmissionType, 0x0D,  1},
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[0].inhibitTime, 0x8D,  2},
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[0].compatibilityEntry, 0x0D,  1},
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[0].eventTimer, 0x8D,  2},
@@ -220,7 +220,7 @@ struct sCO_OD_EEPROM CO_OD_EEPROM = {
 /*0x1801*/ const CO_OD_entryRecord_t OD_record1801[7] = {
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[1].maxSubIndex, 0x05,  1},
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[1].COB_IDUsedByTPDO, 0x8D,  4},
-           {(void*)&CO_OD_ROM.TPDOCommunicationParameter[1].transmissionType, 0xFE,  1},
+           {(void*)&CO_OD_ROM.TPDOCommunicationParameter[1].transmissionType, 0x0D,  1},
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[1].inhibitTime, 0x8D,  2},
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[1].compatibilityEntry, 0x0D,  1},
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[1].eventTimer, 0x8D,  2},
@@ -228,7 +228,7 @@ struct sCO_OD_EEPROM CO_OD_EEPROM = {
 /*0x1802*/ const CO_OD_entryRecord_t OD_record1802[7] = {
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[2].maxSubIndex, 0x05,  1},
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[2].COB_IDUsedByTPDO, 0x8D,  4},
-           {(void*)&CO_OD_ROM.TPDOCommunicationParameter[2].transmissionType, 0xFE,  1},
+           {(void*)&CO_OD_ROM.TPDOCommunicationParameter[2].transmissionType, 0x0D,  1},
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[2].inhibitTime, 0x8D,  2},
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[2].compatibilityEntry, 0x0D,  1},
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[2].eventTimer, 0x8D,  2},
@@ -236,7 +236,7 @@ struct sCO_OD_EEPROM CO_OD_EEPROM = {
 /*0x1803*/ const CO_OD_entryRecord_t OD_record1803[7] = {
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[3].maxSubIndex, 0x05,  1},
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[3].COB_IDUsedByTPDO, 0x8D,  4},
-           {(void*)&CO_OD_ROM.TPDOCommunicationParameter[3].transmissionType, 0xFE,  1},
+           {(void*)&CO_OD_ROM.TPDOCommunicationParameter[3].transmissionType, 0x0D,  1},
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[3].inhibitTime, 0x8D,  2},
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[3].compatibilityEntry, 0x0D,  1},
            {(void*)&CO_OD_ROM.TPDOCommunicationParameter[3].eventTimer, 0x8D,  2},
