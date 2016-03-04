@@ -112,7 +112,6 @@ enum CO_RestoreFunctionality_Flags
 */
 static CO_SDO_abortCode_t storeParameters(uint32_t FlashAddress, uint8_t ParametersSub)
 {
-    uint32_t ret;
     uint32_t addressPtr = 0x00;
     uint32_t addressFinal = 0x00;
     uint32_t* chunk;

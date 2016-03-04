@@ -60,7 +60,7 @@
 #include <stdint.h>         /* for 'int8_t' to 'uint64_t' */
 #include "stm32f30x.h"
 
-#define bool_t	bool
+#define bool_t bool
 #define CO_LITTLE_ENDIAN
 
 /* Exported define -----------------------------------------------------------*/
@@ -81,24 +81,27 @@
 #define CO_LOCK_OD()            __set_PRIMASK(1);
 #define CO_UNLOCK_OD()          __set_PRIMASK(0);
 
-    
 #define CLOCK_CAN                   RCC_APB1Periph_CAN1
 
-#define CAN_REMAP_1                 /* Select CAN1 remap 2 */
+#define CAN_REMAP_1                 /* Select CAN1 remap 1 */
 #ifdef CAN1_NO_REMAP                /* CAN1 not remapped */
 #define CLOCK_GPIO_CAN              RCC_APB2Periph_GPIOA
 #define GPIO_Remapping_CAN          (0)
 #define GPIO_CAN                    GPIOA
 #define GPIO_Pin_CAN_RX             GPIO_Pin_11
 #define GPIO_Pin_CAN_TX             GPIO_Pin_12
+#define GPIO_PinSource_CAN_RX       GPIO_PinSource11
+#define GPIO_PinSource_CAN_TX       GPIO_PinSource12
 #define GPIO_CAN_Remap_State        DISABLE
 #endif
-#ifdef CAN_REMAP1                  /* CAN1 remap 1 */
+#ifdef CAN_REMAP_1                  /* CAN1 remap 1 */
 #define CLOCK_GPIO_CAN              RCC_AHBPeriph_GPIOB
 #define GPIO_Remapping_CAN          GPIO_Remap1_CAN1
 #define GPIO_CAN                    GPIOB
 #define GPIO_Pin_CAN_RX             GPIO_Pin_8
 #define GPIO_Pin_CAN_TX             GPIO_Pin_9
+#define GPIO_PinSource_CAN_RX       GPIO_PinSource8
+#define GPIO_PinSource_CAN_TX       GPIO_PinSource9
 #define GPIO_CAN_Remap_State        ENABLE
 #endif
 #ifdef CAN_REMAP_2                 /* CAN1 remap 2 */
@@ -107,6 +110,8 @@
 #define GPIO_CAN                    GPIOD
 #define GPIO_Pin_CAN_RX             GPIO_Pin_0
 #define GPIO_Pin_CAN_TX             GPIO_Pin_1
+#define GPIO_PinSource_CAN_RX       GPIO_PinSource0
+#define GPIO_PinSource_CAN_TX       GPIO_PinSource1
 #define GPIO_CAN_Remap_State        ENABLE
 #endif
 
@@ -208,11 +213,6 @@ typedef enum {
 /* Exported variables -----------------------------------------------------------*/
 
 /* Exported functions -----------------------------------------------------------*/
-void InitCanLeds(void);
-void CanLedsOn(eCoLeds led);
-void CanLedsOff(eCoLeds led);
-void CanLedsSet(eCoLeds led);
-
 
 /* Request CAN configuration or normal mode */
 void CO_CANsetConfigurationMode(CAN_TypeDef* CANbaseAddress);
@@ -273,7 +273,6 @@ void CO_CANverifyErrors(CO_CANmodule_t *CANmodule);
 void CO_CANinterrupt_Rx(CO_CANmodule_t *CANmodule);
 void CO_CANinterrupt_Tx(CO_CANmodule_t *CANmodule);
 void CO_CANinterrupt_Status(CO_CANmodule_t *CANmodule);
-void CO_CANprocess_Rx(CO_CANmodule_t *CANmodule, CanRxMsg* RxMsg);
 
 
 #endif

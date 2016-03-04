@@ -1,9 +1,10 @@
 /*
- * Atmel SAM3 flash support for CANopen stack
+ * STM32F3 flash support for CANopen stack
  *
  * @file        CO_Flash.h
  * @author      Janez Paternoster
  * @author      Olof Larsson
+ * @author      Petteri Mustonen
  * @copyright   2014 Janez Paternoster
  *
  * This file is part of CANopenNode, an opensource CANopen Stack.
