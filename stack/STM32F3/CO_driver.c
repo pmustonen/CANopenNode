@@ -277,7 +277,7 @@ CO_ReturnError_t CO_CANsend(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer)
 
     /* Verify overflow */
     if (buffer->bufferFull) {
-        if(!CANmodule->firstCANtxMessage)/* don't set error, if bootup message is still on buffers */
+        if(!CANmodule->firstCANtxMessage) /* don't set error, if bootup message is still on buffers */
             CO_errorReport((CO_EM_t*)CANmodule->em, CO_EM_CAN_TX_OVERFLOW, CO_EMC_CAN_OVERRUN, 0);
         err = CO_ERROR_TX_OVERFLOW;
     }
@@ -421,18 +421,40 @@ void CO_CANinterrupt_Tx(CO_CANmodule_t *CANmodule)
 /******************************************************************************/
 static uint8_t CO_CANsendToModule(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer)
 {
-    uint8_t txBuff;
-    CanTxMsg CAN1_TxMsg;
-    int i;
+    CAN_TxMailBox_TypeDef* txMbox;
 
-    CAN1_TxMsg.IDE = CAN_ID_STD;
-    CAN1_TxMsg.DLC = buffer->DLC;
-    for (i = 0; i < 8; i++) CAN1_TxMsg.Data[i] = buffer->data[i];
-    CAN1_TxMsg.StdId = ((buffer->ident) >> 21);
-    CAN1_TxMsg.RTR = CAN_RTR_DATA;
+    /* Checks if the transmit mailbox is available */
+    if ((CANmodule->CANbaseAddress->TSR & CAN_TSR_TME0) == CAN_TSR_TME0) {
+        txMbox = &CANmodule->CANbaseAddress->sTxMailBox[0];
+    }
+    else {
+        return CAN_TxStatus_NoMailBox;
+    }
 
-    txBuff = CAN_Transmit(CANmodule->CANbaseAddress, &CAN1_TxMsg);
-    return txBuff;
+    /* ID: always assuming standard 11-bit ID */
+    txMbox->TIR &= 1;
+    txMbox->TIR |= ((buffer->ident) | CAN_RTR_DATA);
+
+    /* DLC */
+    buffer->DLC &= (uint8_t)0x0000000F;
+    txMbox->TDTR &= (uint32_t)0xFFFFFFF0;
+    txMbox->TDTR |= buffer->DLC;
+    
+    /* Data field */
+    txMbox->TDLR = (((uint32_t)buffer->data[3] << 24) |  
+                    ((uint32_t)buffer->data[2] << 16) |
+                    ((uint32_t)buffer->data[1] << 8) | 
+                    ((uint32_t)buffer->data[0]));
+                    
+    txMbox->TDHR = (((uint32_t)buffer->data[7] << 24) | 
+                    ((uint32_t)buffer->data[6] << 16) |
+                    ((uint32_t)buffer->data[5] << 8) |
+                    ((uint32_t)buffer->data[4]));
+                    
+    /* Request transmission */
+    txMbox->TIR |= 1;
+    
+    return 0;
 }
 
 /******************************************************************************/
