@@ -69,7 +69,6 @@
 
 /* Peripheral addresses */
 #define ADDR_CAN1               CAN1
-//#define TMIDxR_TXRQ  ((uint32_t)0x00000001) /* Transmit mailbox request */
 
 /* Critical sections */
 #define CO_LOCK_CAN_SEND()      __set_PRIMASK(1);
@@ -104,17 +103,6 @@
 #define GPIO_PinSource_CAN_TX       GPIO_PinSource9
 #define GPIO_CAN_Remap_State        ENABLE
 #endif
-#ifdef CAN_REMAP_2                 /* CAN1 remap 2 */
-#define CLOCK_GPIO_CAN              RCC_APB2Periph_GPIOD
-#define GPIO_Remapping_CAN          GPIO_Remap2_CAN1
-#define GPIO_CAN                    GPIOD
-#define GPIO_Pin_CAN_RX             GPIO_Pin_0
-#define GPIO_Pin_CAN_TX             GPIO_Pin_1
-#define GPIO_PinSource_CAN_RX       GPIO_PinSource0
-#define GPIO_PinSource_CAN_TX       GPIO_PinSource1
-#define GPIO_CAN_Remap_State        ENABLE
-#endif
-
 
 #define CAN1_TX_INTERRUPTS          CAN1_TX_IRQn
 #define CAN1_RX0_INTERRUPTS         CAN1_RX0_IRQn
@@ -203,13 +191,6 @@ typedef struct{
     void               *em;
 }CO_CANmodule_t;
 
-/* Init CAN Led Interface */
-typedef enum {
-    eCoLed_None = 0,
-    eCoLed_Green = 1,
-    eCoLed_Red = 2,
-} eCoLeds;
-
 /* Exported variables -----------------------------------------------------------*/
 
 /* Exported functions -----------------------------------------------------------*/
@@ -231,11 +212,6 @@ CO_ReturnError_t CO_CANmodule_init(
 
 /* Switch off CANmodule. */
 void CO_CANmodule_disable(CO_CANmodule_t *CANmodule);
-
-
-/* Read CAN identifier */
-//uint16_t CO_CANrxMsg_readIdent(const CO_CANrxMsg_t *rxMsg);
-
 
 /* Configure CAN message receive buffer. */
 CO_ReturnError_t CO_CANrxBufferInit(

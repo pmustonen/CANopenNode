@@ -50,7 +50,6 @@
 #include "stm32f30x.h"
 #include "CO_driver.h"
 #include "CO_Emergency.h"
-//#include "led.h"
 #include <string.h>
 
 /* Private macro -------------------------------------------------------------*/
@@ -159,7 +158,6 @@ CO_ReturnError_t CO_CANmodule_init(
 
     result = CAN_Init(CANmodule->CANbaseAddress, &CAN_InitStruct);
     if (result == 0) {
-       // TRACE_DEBUG_WP("res=%d\n\r", result);
        return CO_ERROR_TIMEOUT;  /* CO- Return Init failed */
     }
 
@@ -469,7 +467,6 @@ static void CO_CANsendToModule(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer, ui
     CanTxMsg CAN1_TxMsg;
     int i;
 
-    /*Test code, VJ using Drivers Start*/
     CAN1_TxMsg.IDE = CAN_ID_STD;
     CAN1_TxMsg.DLC = buffer->DLC;
     for (i = 0; i < 8; i++) CAN1_TxMsg.Data[i] = buffer->data[i];
@@ -478,12 +475,8 @@ static void CO_CANsendToModule(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer, ui
 
     CAN_Transmit(CANmodule->CANbaseAddress, &CAN1_TxMsg);
     CAN_ITConfig(CANmodule->CANbaseAddress, CAN_IT_TME, ENABLE);
-
-    /*Test code, VJ using Drivers End*/
-
 }
 
-/* CO- VJ Changed Start */
 /******************************************************************************/
 static void CO_CANClkSetting (void)
 {
@@ -508,4 +501,3 @@ static void CO_CANconfigGPIO (void)
 	GPIO_PinAFConfig(GPIO_CAN, GPIO_PinSource_CAN_RX, GPIO_AF_9);
 	GPIO_PinAFConfig(GPIO_CAN, GPIO_PinSource_CAN_TX, GPIO_AF_9);
 }
-/* CO- VJ Change End */
