@@ -303,7 +303,38 @@ CO_ReturnError_t CO_CANsend(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer)
 /******************************************************************************/
 void CO_CANclearPendingSyncPDOs(CO_CANmodule_t *CANmodule)
 {
-    /* See generic driver for implemetation. */
+    uint32_t tpdoDeleted = 0U;
+    uint8_t state = 0;
+
+    CO_LOCK_CAN_SEND();
+    /* Abort message from CAN module, if there is synchronous TPDO. */
+    state = CAN_TransmitStatus(CANmodule->CANbaseAddress, CO_CAN_TXMAILBOX);
+    if((state == CAN_TxStatus_Pending) && (CANmodule->bufferInhibitFlag)) {
+        CAN_CancelTransmit(CANmodule->CANbaseAddress, CO_CAN_TXMAILBOX);
+        CANmodule->bufferInhibitFlag = false;
+        tpdoDeleted = 1U;
+    }
+    /* delete also pending synchronous TPDOs in TX buffers */
+    if(CANmodule->CANtxCount != 0U){
+        uint16_t i;
+        CO_CANtx_t *buffer = &CANmodule->txArray[0];
+        for(i = CANmodule->txSize; i > 0U; i--){
+            if(buffer->bufferFull){
+                if(buffer->syncFlag){
+                    buffer->bufferFull = false;
+                    CANmodule->CANtxCount--;
+                    tpdoDeleted = 2U;
+                }
+            }
+            buffer++;
+        }
+    }
+    CO_UNLOCK_CAN_SEND();
+
+
+    if(tpdoDeleted != 0U){
+        CO_errorReport((CO_EM_t*)CANmodule->em, CO_EM_TPDO_OUTSIDE_WINDOW, CO_EMC_COMMUNICATION, tpdoDeleted);
+    }
 }
 
 /******************************************************************************/
@@ -384,8 +415,6 @@ void CO_CANinterrupt_Rx(CO_CANmodule_t *CANmodule)
 // Interrupt from trasmitter
 void CO_CANinterrupt_Tx(CO_CANmodule_t *CANmodule)
 {
-    int8_t txBuff;
-    
     /* First CAN message (bootup) was sent successfully */
     CANmodule->firstCANtxMessage = 0;
     
@@ -407,7 +436,7 @@ void CO_CANinterrupt_Tx(CO_CANmodule_t *CANmodule)
                 
                 /* Copy message to CAN buffer */
                 CANmodule->bufferInhibitFlag = buffer->syncFlag;
-                txBuff = CO_CANsendToModule(CANmodule, buffer);
+                CO_CANsendToModule(CANmodule, buffer);
                 break;                      /* exit for loop */
             }
             buffer++;
@@ -425,7 +454,7 @@ static uint8_t CO_CANsendToModule(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer)
 
     /* Checks if the transmit mailbox is available */
     if ((CANmodule->CANbaseAddress->TSR & CAN_TSR_TME0) == CAN_TSR_TME0) {
-        txMbox = &CANmodule->CANbaseAddress->sTxMailBox[0];
+        txMbox = &CANmodule->CANbaseAddress->sTxMailBox[CO_CAN_TXMAILBOX];
     }
     else {
         return CAN_TxStatus_NoMailBox;

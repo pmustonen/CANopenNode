@@ -107,9 +107,7 @@
 #define CAN1_TX_INTERRUPTS          CAN1_TX_IRQn
 #define CAN1_RX0_INTERRUPTS         CAN1_RX0_IRQn
 
-#define CAN_TXMAILBOX_0   ((uint8_t)0x00)
-#define CAN_TXMAILBOX_1   ((uint8_t)0x01)
-#define CAN_TXMAILBOX_2   ((uint8_t)0x02)
+#define CO_CAN_TXMAILBOX   ((uint8_t)0x00)
 
 /* Timeout for initialization */
 
