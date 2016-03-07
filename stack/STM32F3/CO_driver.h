@@ -68,17 +68,17 @@
 #define ALIGN_STRUCT_DWORD          __attribute__((aligned(4)))
 
 /* Peripheral addresses */
-#define ADDR_CAN1               CAN1
+#define ADDR_CAN1                   CAN1
 
 /* Critical sections */
-#define CO_LOCK_CAN_SEND()      __set_PRIMASK(1);
-#define CO_UNLOCK_CAN_SEND()    __set_PRIMASK(0);
+#define CO_LOCK_CAN_SEND()          __set_PRIMASK(1);
+#define CO_UNLOCK_CAN_SEND()        __set_PRIMASK(0);
 
-#define CO_LOCK_EMCY()          __set_PRIMASK(1);
-#define CO_UNLOCK_EMCY()        __set_PRIMASK(0);
+#define CO_LOCK_EMCY()              __set_PRIMASK(1);
+#define CO_UNLOCK_EMCY()            __set_PRIMASK(0);
 
-#define CO_LOCK_OD()            __set_PRIMASK(1);
-#define CO_UNLOCK_OD()          __set_PRIMASK(0);
+#define CO_LOCK_OD()                __set_PRIMASK(1);
+#define CO_UNLOCK_OD()              __set_PRIMASK(0);
 
 #define CLOCK_CAN                   RCC_APB1Periph_CAN1
 
@@ -248,7 +248,5 @@ void CO_CANverifyErrors(CO_CANmodule_t *CANmodule);
 /* CAN interrupts receives and transmits CAN messages. */
 void CO_CANinterrupt_Rx(CO_CANmodule_t *CANmodule);
 void CO_CANinterrupt_Tx(CO_CANmodule_t *CANmodule);
-void CO_CANinterrupt_Status(CO_CANmodule_t *CANmodule);
-
 
 #endif

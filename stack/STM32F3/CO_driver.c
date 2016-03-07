@@ -58,7 +58,7 @@
 /* Private function ----------------------------------------------------------*/
 static void CO_CANClkSetting (void);
 static void CO_CANconfigGPIO (void);
-static void CO_CANsendToModule(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer, uint8_t transmit_mailbox);
+static uint8_t CO_CANsendToModule(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer);
 
 /*******************************************************************************
    Macro and Constants - CAN module registers
@@ -269,42 +269,11 @@ CO_CANtx_t *CO_CANtxBufferInit(
     return buffer;
 }
 
-int8_t getFreeTxBuff(CO_CANmodule_t *CANmodule)
-{
-    uint8_t txBuff = CAN_TXMAILBOX_0;
-	
-    //if (CAN_TransmitStatus(CANmodule->CANbaseAddress, txBuff) == CAN_TxStatus_Ok)
-    for (txBuff = CAN_TXMAILBOX_0; txBuff <= (CAN_TXMAILBOX_2 + 1); txBuff++)
-    {
-        switch (txBuff)
-        {
-        case (CAN_TXMAILBOX_0 ):
-            if (CANmodule->CANbaseAddress->TSR & CAN_TSR_TME0 )
-                return txBuff;
-            else
-                break;
-        case (CAN_TXMAILBOX_1 ):
-            if (CANmodule->CANbaseAddress->TSR & CAN_TSR_TME1 )
-                return txBuff;
-            else
-                break;
-        case (CAN_TXMAILBOX_2 ):
-            if (CANmodule->CANbaseAddress->TSR & CAN_TSR_TME2 )
-                return txBuff;
-            else
-                break;
-			default:
-                break;
-        }
-    }
-    return -1;
-}
-
 /******************************************************************************/
 CO_ReturnError_t CO_CANsend(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer)
 {
     CO_ReturnError_t err = CO_ERROR_NO;
-    int8_t txBuff;
+    uint8_t txBuff;
 
     /* Verify overflow */
     if (buffer->bufferFull) {
@@ -315,20 +284,16 @@ CO_ReturnError_t CO_CANsend(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer)
 
     CO_LOCK_CAN_SEND();
     
-    /* if CAN TB buffer0 is free, copy message to it*/
-    txBuff = getFreeTxBuff(CANmodule);
-    
     // #error change this - use only one buffer for transmission - see generic driver
-    if (txBuff != -1 && CANmodule->CANtxCount == 0) {
-        CANmodule->bufferInhibitFlag = buffer->syncFlag;
-        CO_CANsendToModule(CANmodule, buffer, txBuff);
-    }
-    else {
-        /* if no buffer is free, message will be sent by interrupt */
+    // for now, send the message with CAN_Transmit command in the driver which determines
+    // the free mailbox by itself.
+    CANmodule->bufferInhibitFlag = buffer->syncFlag;
+
+    txBuff = CO_CANsendToModule(CANmodule, buffer);
+
+    if (txBuff == CAN_TxStatus_NoMailBox) {
         buffer->bufferFull = 1;
         CANmodule->CANtxCount++;
-        /* vsechny buffery jsou plny, musime povolit preruseni od vysilace, odvysilat az v preruseni */
-        CAN_ITConfig(CANmodule->CANbaseAddress, CAN_IT_TME, ENABLE);
     }
     CO_UNLOCK_CAN_SEND();
 
@@ -439,11 +404,10 @@ void CO_CANinterrupt_Tx(CO_CANmodule_t *CANmodule)
             if(buffer->bufferFull) {
                 buffer->bufferFull = 0;
                 CANmodule->CANtxCount--;
-                txBuff = getFreeTxBuff(CANmodule);    //VJ
                 
                 /* Copy message to CAN buffer */
                 CANmodule->bufferInhibitFlag = buffer->syncFlag;
-                CO_CANsendToModule(CANmodule, buffer, txBuff);
+                txBuff = CO_CANsendToModule(CANmodule, buffer);
                 break;                      /* exit for loop */
             }
             buffer++;
@@ -455,15 +419,9 @@ void CO_CANinterrupt_Tx(CO_CANmodule_t *CANmodule)
 }
 
 /******************************************************************************/
-void CO_CANinterrupt_Status(CO_CANmodule_t *CANmodule)
+static uint8_t CO_CANsendToModule(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer)
 {
-  // status is evalved with pooling
-}
-
-/******************************************************************************/
-static void CO_CANsendToModule(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer, uint8_t transmit_mailbox)
-{
-
+    uint8_t txBuff;
     CanTxMsg CAN1_TxMsg;
     int i;
 
@@ -473,8 +431,8 @@ static void CO_CANsendToModule(CO_CANmodule_t *CANmodule, CO_CANtx_t *buffer, ui
     CAN1_TxMsg.StdId = ((buffer->ident) >> 21);
     CAN1_TxMsg.RTR = CAN_RTR_DATA;
 
-    CAN_Transmit(CANmodule->CANbaseAddress, &CAN1_TxMsg);
-    CAN_ITConfig(CANmodule->CANbaseAddress, CAN_IT_TME, ENABLE);
+    txBuff = CAN_Transmit(CANmodule->CANbaseAddress, &CAN1_TxMsg);
+    return txBuff;
 }
 
 /******************************************************************************/
